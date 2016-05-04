@@ -1,3 +1,11 @@
+/*
+ * roboclaw.h - header file defines Roboclaw Class 
+ *
+ * This code is a modified version of the Ion Motion Control Arduino library.
+ * To view the code in its original form, download it at
+ *     http://downloads.ionmc.com/code/arduino.zip 
+ */
+
 #ifndef ROBOCLAW_H
 #define ROBOCLAW_H
 
@@ -6,18 +14,27 @@
 
 #include <serial/serial.h>
 
-/******************************************************************************
-* Definitions
-******************************************************************************/
-
-class RoboClaw
+class Roboclaw
 {
 	public:
-		// public methods
-		RoboClaw(std::string &port, uint32_t baudrate);	//ack option only available on 3.1.8 and newer firmware
+        /*
+         * initializes serial port with specified file and baudrate
+         */
+		Roboclaw(std::string &port, uint32_t baudrate);	/* ack option only available on 3.1.8 and newer firmware */
 
-		~RoboClaw();
+        /*
+         * closes serial port and frees the associated memory
+         */
+		~Roboclaw();
 
+        /*
+         * The following are all public helper methods for reading data from and sending
+         *		commands to the Roboclaw
+         * The address argument allows code to control multiple Roboclaws in parallel
+         * Setters return a bool indicating the success of the operation
+         * Getters return the value from the associated command and indicate the success
+         *      of the operation by updating the value of the valid argument
+         */
 		bool ForwardM1(uint8_t address, uint8_t speed);
 		bool BackwardM1(uint8_t address, uint8_t speed);
 		bool SetMinVoltageMainBattery(uint8_t address, uint8_t voltage);
@@ -111,25 +128,93 @@ class RoboClaw
 		bool GetPWMMode(uint8_t address, uint8_t &mode);
 
 	private:
-		serial::Serial * port_;
-
-		/* cyclic redundency check for serial communication */
-	    uint16_t crc_;
+		/*
+		 * resets the current crc caluclation
+		 */
 		void crc_clear();
+
+		/*
+		 * updates the crc calculation with the specified byte
+		 */
 		void crc_update(uint8_t data);
+
+		/* 
+		 * returns the current value of the crc caluclation
+		 * this will likely be deprecated in future version as the crc_ variable
+		 * 		can be accessed directly
+		 */
 		uint16_t crc_get();
+		
+		/*
+		 * writes n bytes to the serial port as specified by the arguments
+		 */
 		bool write_n(uint8_t byte,...);
+
+		/*
+		 * reads n four byte registers into the associated memory referenced by uint32_t
+		 *      pointers passed as arguments arguments
+		 * returns the success of the operation
+		 */
 		bool read_n(uint8_t byte,uint8_t address,uint8_t cmd,...);
-		uint32_t Read4_1(uint8_t address,uint8_t cmd,uint8_t *status,bool *valid);
-		uint32_t Read4(uint8_t address,uint8_t cmd,bool *valid);
-		uint16_t Read2(uint8_t address,uint8_t cmd,bool *valid);
-		uint8_t Read1(uint8_t address,uint8_t cmd,bool *valid);
+
+		/*
+		 * reads a 4 byte register along with the status byte
+		 * updates the value of the status byte
+		 * indicates the success/failure of the operation through the valid argument
+		 * returns the contents of the register if successful
+		 */
+		uint32_t read4_1(uint8_t address,uint8_t cmd,uint8_t *status,bool *valid);
+
+        /*
+         * reads a 4 byte register
+         * indicates success/failure of the operation through the valid argument
+         * returns the contents of the register if successful
+         */
+		uint32_t read4(uint8_t address,uint8_t cmd,bool *valid);
+
+		/*
+		 * reads 2 byte register
+		 * indicates success/failure of the operation through the valid argument
+		 * returns the contents of the register if successul
+		 */
+		uint16_t read2(uint8_t address,uint8_t cmd,bool *valid);
+
+		/*
+		 * reads a 1 byte register
+		 * indicates success/failure of the operation through the valid argument
+		 * returns the register's contents upon success
+		 */
+		uint8_t read1(uint8_t address,uint8_t cmd,bool *valid);
+
+		/*
+		 * flushes the input and output buffers of the serial port
+		 */
 		void flush();
 
+		/*
+		 * writes a single byte to the serial port
+		 */
 	    void write(uint8_t data);
+
+        /*
+         * reads a single byte from the serial port
+         * returns the byte read or -1 in error
+         */
 	    int16_t read();
 
-		/* enum stores register addresses */
+        /* 
+         * pointer to the serial port used for communication with the roboclaw 
+         */
+        serial::Serial * port_;
+
+        /* 
+         * tracks and update the crc calculation 
+         */
+	    uint16_t crc_;
+
+		/* 
+		 * enum stores addresses of all the roboclaw's registers 
+		 */
 		enum {
 				M1FORWARD = 0,
 				M1BACKWARD = 1,
@@ -207,13 +292,13 @@ class RoboClaw
 				GETISPEEDS = 79,
 				RESTOREDEFAULTS = 80,
 				GETTEMP = 82,
-				GETTEMP2 = 83,	//Only valid on some models
+				GETTEMP2 = 83,	/* Only valid on some models */
 				GETERROR = 90,
 				GETENCODERMODE = 91,
 				SETM1ENCODERMODE = 92,
 				SETM2ENCODERMODE = 93,
 				WRITENVM = 94,
-				READNVM = 95,	//Reloads values from Flash into Ram
+				READNVM = 95,	/* Reloads values from Flash into Ram */
 				SETCONFIG = 98,
 				GETCONFIG = 99,
 				SETM1MAXCURRENT = 133,
@@ -222,7 +307,7 @@ class RoboClaw
 				GETM2MAXCURRENT = 136,
 				SETPWMMODE = 148,
 				GETPWMMODE = 149,
-				FLAGBOOTLOADER = 255 // only available via USB communications
+				FLAGBOOTLOADER = 255 /* only available via USB communications */
 		};
 };
 #endif

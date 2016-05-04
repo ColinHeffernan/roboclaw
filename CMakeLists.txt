@@ -99,9 +99,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES roboclaw
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS serial
-  DEPENDS system_lib
+# DEPENDS system_lib
 )
 
 ###########
@@ -111,9 +111,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  include/${PROJECT_NAME}/
+include_directories(include
   ${catkin_INCLUDE_DIRS}
+  include/roboclaw
 )
 
 ## Declare a C++ library
@@ -127,7 +127,7 @@ add_library(${PROJECT_NAME}
 )
 
 # link main library to serial library
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+#target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
