@@ -113,7 +113,6 @@ bool Roboclaw::write_n(uint8_t cnt, ... )
     uint8_t trys=MAXRETRY;
     do{
         crc_clear();
-
         va_list marker;
         va_start(marker, cnt);     /* Initialize variable arguments */
         /* read each argument after cnt, update crc, and send the data */
@@ -131,9 +130,7 @@ bool Roboclaw::write_n(uint8_t cnt, ... )
         if(read()==0xFF)
             return true;
     }while(trys--);
-    printf("S1\n");
     return false;
-    printf("S2\n");
 }
 
 /*
