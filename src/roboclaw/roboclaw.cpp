@@ -7,6 +7,7 @@
  */
 
 #include <roboclaw/roboclaw.h>
+#include <ros/console.h>
 
 /*
  * Macros taken directly from Arduino Library
@@ -18,10 +19,11 @@
 /*
  * Constructor opens port at desired baudrate
  */
-Roboclaw::Roboclaw(std::string &port, uint32_t baudrate)
+Roboclaw::Roboclaw(std::string port, uint32_t baudrate)
 {
     /* initialize pointer to a new Serial port object */
     port_ = new serial::Serial(port, baudrate, serial::Timeout::simpleTimeout(100));
+    port_->close();
     port_->open();
 }
 
@@ -85,7 +87,7 @@ void Roboclaw::crc_update (uint8_t data)
     int i;
     crc_ = crc_^ ((uint16_t)data << 8);
     for (i=0; i<8; i++)
-    {
+    {        //port_->write((uint8_t *) &crc_, 2);
         if (crc_ & 0x8000)
             crc_ = (crc_ << 1) ^ 0x1021;
         else
@@ -111,7 +113,6 @@ bool Roboclaw::write_n(uint8_t cnt, ... )
     uint8_t trys=MAXRETRY;
     do{
         crc_clear();
-
         va_list marker;
         va_start(marker, cnt);     /* Initialize variable arguments */
         /* read each argument after cnt, update crc, and send the data */
@@ -122,7 +123,10 @@ bool Roboclaw::write_n(uint8_t cnt, ... )
         }
         va_end( marker );              /* Reset variable arguments */
         /* send the crc to the Roboclaw and check for return value */
-        port_->write((uint8_t *) &crc_, 2);
+        uint8_t b1 = (crc_>>8)&0xFF;
+        uint8_t b2 = (crc_)&0xFF;
+        port_->write(&b1,1);
+        port_->write(&b2,1);
         if(read()==0xFF)
             return true;
     }while(trys--);
