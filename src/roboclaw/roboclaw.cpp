@@ -122,7 +122,10 @@ bool Roboclaw::write_n(uint8_t cnt, ... )
         }
         va_end( marker );              /* Reset variable arguments */
         /* send the crc to the Roboclaw and check for return value */
-        port_->write((uint8_t *) &crc_, 2);
+        uint8_t b1 = (crc_>>8)&0xFF;  // TODO: Make these 4 lines pretty.
+        uint8_t b2 = (crc_)&0xFF;
+        port_->write(&b1,1);
+        port_->write(&b2,1);
         if(read()==0xFF)
             return true;
     }while(trys--);
